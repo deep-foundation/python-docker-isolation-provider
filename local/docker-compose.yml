@@ -1,0 +1,13 @@
+version: '3.6'
+services:
+  js-docker-isolation-provider:
+    image: deepf/python-docker-isolation-provider:main
+    networks:
+      - deep
+    ports:
+      - 3021:3021
+    restart: always
+    environment: {}
+networks:
+  deep:
+    driver: bridge
