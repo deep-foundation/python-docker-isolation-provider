@@ -1,6 +1,5 @@
 import ast
-import io
-import sys
+import subprocess
 
 from flask import Flask, jsonify, request
 
@@ -23,18 +22,20 @@ def call():
     params = body['params']
     data = params['data']
     locals().update(data)
-    start = "def fn():\n" \
-            f" globals().update({data})\n"
-    code = params['code']
-    code = '\n'.join([' ' + line for line in code.splitlines()])
-    end = f"\nresult = fn()" \
-          f"\nprint(result)"
-    output = io.StringIO()
-    sys.stdout = output
-    exec(start + code + end)
-    result = output.getvalue()
+    start = "def fn(arg):\n" \
+            f" data = arg['data']\n" \
+            f" globals().update({data})\n" \
+            f" gql = arg['gql']\n" \
+            f" newLink = arg['newLink']\n"
+    code = '\n'.join([' ' + line for line in params['code'].splitlines()])
+    end = f"\nprint(fn({params}))"
+    code = start + code + end
+    with open("exec_code.py", "w") as file:
+        file.write(code)
+    process = subprocess.Popen(["python", "exec_code.py"], stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    result = output.decode('utf-8')
     obj = ast.literal_eval(result)
-    print(obj)
     return jsonify(obj)
 
 
