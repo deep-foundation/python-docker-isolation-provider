@@ -1,4 +1,5 @@
 import ast
+import os
 import subprocess
 
 from flask import Flask, jsonify, request
@@ -40,4 +41,4 @@ def call():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, port=os.environ.get("PORT"))
