@@ -26,7 +26,6 @@ def call():
     start = "def fn(arg):\n" \
             f" data = arg['data']\n" \
             f" globals().update({data})\n" \
-            f" gql = arg['gql']\n" \
             f" newLink = arg['newLink']\n"
     code = '\n'.join([' ' + line for line in params['code'].splitlines()])
     end = f"\nprint(fn({params}))"
