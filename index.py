@@ -36,8 +36,11 @@ def call():
     result = output.decode('utf-8')
     print('result')
     print(result)
+    error_result = error.decode('utf-8')
+    print('error_result')
+    print(error_result)
     obj = ast.literal_eval(result)
-    return jsonify(obj)
+    return jsonify({ 'resolved': obj })
 
 
 if __name__ == '__main__':
