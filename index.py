@@ -34,6 +34,8 @@ def call():
     process = subprocess.Popen(["python", "exec_code.py"], stdout=subprocess.PIPE)
     output, error = process.communicate()
     result = output.decode('utf-8')
+    print('result')
+    print(result)
     obj = ast.literal_eval(result)
     return jsonify(obj)
 
