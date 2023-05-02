@@ -25,11 +25,11 @@ def call():
         params = body['params']
         args = {}
         args['data'] = params['data']
-        code = f"{params['code']}\nhandlerContext['result'] = fn({args})"
+        handler_context = {}
+        code = f"{params['code']}\handler_context['result'] = fn({args})"
         codeObject = compile(code, 'python_handler', 'exec')
-        handlerContext = {}
-        exec(codeObject, dict(handlerContext=handlerContext))
-        result = handlerContext['result']
+        exec(codeObject, dict(handler_context=handler_context))
+        result = handler_context['result']
         return jsonify({ 'resolved': result })
     except Exception as e:
         return jsonify({ 'rejected': traceback.format_exc() })
