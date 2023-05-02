@@ -2,34 +2,50 @@ import ast
 import os
 import subprocess
 import traceback
-
+from gql import gql, Client
+from gql.transport.aiohttp import AIOHTTPTransport
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
+GQL_URN = os.environ.get("GQL_URN", "localhost:3006/gql")
+GQL_SSL = os.environ.get("GQL_SSL", 0)
+
+def execute_handler(code, args):
+    handler_context = {}
+    generated_code = f"{code}\nhandler_context['result'] = fn({args})"
+    code_object = compile(generated_code, 'python_handler', 'exec')
+    exec(code_object, dict(handler_context=handler_context))
+    result = handler_context['result']
+    return result
+
+def make_deep_client(token):
+    if not token:
+        raise ValueError("No token provided")
+    url = bool(int(GQL_SSL)) if f"https://{GQL_URN}" else f"http://{GQL_URN}"
+    transport = AIOHTTPTransport(url=url, headers={ 'Authorization': token })
+    deep_client = Client(transport=transport, fetch_schema_from_transport=True)
+    return deep_client
 
 @app.route('/healthz', methods=['GET'])
 def healthz():
     return jsonify({})
 
-
 @app.route('/init', methods=['POST'])
 def init():
     return jsonify({})
-
 
 @app.route('/call', methods=['POST'])
 def call():
     try:
         body = request.json
         params = body['params']
-        args = {}
-        args['data'] = params['data']
-        handler_context = {}
-        code = f"{params['code']}\nhandler_context['result'] = fn({args})"
-        codeObject = compile(code, 'python_handler', 'exec')
-        exec(codeObject, dict(handler_context=handler_context))
-        result = handler_context['result']
+        args = {
+            'deep': make_deep_client(params['jwt']),
+            'data': params['data'],
+            'gql': gql
+        }
+        result = execute_handler(params['code'], args)
         return jsonify({ 'resolved': result })
     except Exception as e:
         return jsonify({ 'rejected': traceback.format_exc() })
