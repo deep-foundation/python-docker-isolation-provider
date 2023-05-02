@@ -24,7 +24,7 @@ def call():
         body = request.json
         params = body['params']
         args = {}
-        args['data'] = args['data']
+        args['data'] = params['data']
         code = f"{params['code']}\nhandlerContext['result'] = fn({args})"
         codeObject = compile(codeRule, 'python_handler', 'exec')
         handlerContext = {}
