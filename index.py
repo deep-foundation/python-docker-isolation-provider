@@ -30,8 +30,7 @@ def call():
         handlerContext = {}
         exec(codeObject, dict(handlerContext=handlerContext))
         result = handlerContext['result']
-        obj = ast.literal_eval(result)
-        return jsonify({ 'resolved': obj })
+        return jsonify({ 'resolved': result })
     except Exception as e:
         return jsonify({ 'rejected': traceback.format_exc() })
 
