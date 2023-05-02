@@ -12,11 +12,11 @@ GQL_URN = os.environ.get("GQL_URN", "localhost:3006/gql")
 GQL_SSL = os.environ.get("GQL_SSL", 0)
 
 def execute_handler(code, args):
-    handler_context = {}
-    generated_code = f"{code}\nhandler_context['result'] = fn({args})"
+    python_handler_context = { 'args': args }
+    generated_code = f"{code}\npython_handler_context['result'] = fn(python_handler_context['args'])"
     code_object = compile(generated_code, 'python_handler', 'exec')
-    exec(code_object, dict(handler_context=handler_context))
-    result = handler_context['result']
+    exec(code_object, dict(python_handler_context=python_handler_context))
+    result = python_handler_context['result']
     return result
 
 def make_deep_client(token):
