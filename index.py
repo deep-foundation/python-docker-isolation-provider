@@ -1,6 +1,7 @@
 import ast
 import os
 import subprocess
+import traceback
 
 from flask import Flask, jsonify, request
 
@@ -19,29 +20,20 @@ def init():
 
 @app.route('/call', methods=['POST'])
 def call():
-    body = request.json
-    params = body['params']
-    data = params['data']
-    locals().update(data)
-    start = "def fn(arg):\n" \
-            f" data = arg['data']\n" \
-            f" globals().update({data})\n"
-    code = '\n'.join([' ' + line for line in params['code'].splitlines()])
-    end = f"\nprint(fn({params}))"
-    code = start + code + end
-    with open("exec_code.py", "w") as file:
-        file.write(code)
-    process = subprocess.Popen(["python", "exec_code.py"], stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    result = output.decode('utf-8')
-    print('result')
-    print(result)
-#     error_result = error.decode('utf-8')
-#     print('error_result')
-#     print(error_result)
-    obj = ast.literal_eval(result)
-    return jsonify({ 'resolved': obj })
-
+    try:
+        body = request.json
+        params = body['params']
+        args = {}
+        args['data'] = args['data']
+        code = f"{params['code']}\nhandlerContext['result'] = fn({args})"
+        codeObject = compile(codeRule, 'python_handler', 'exec')
+        handlerContext = {}
+        exec(codeObject, dict(handlerContext=handlerContext))
+        result = handlerContext['result']
+        obj = ast.literal_eval(result)
+        return jsonify({ 'resolved': obj })
+    except Exception as e:
+        return jsonify({ 'rejected': traceback.format_exc() })
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=os.environ.get("PORT"), use_reloader=False)
+    app.run(debug=True, host="0.0.0.0", port=os.environ.get("PORT"), use_reloader=False, threaded=True)
