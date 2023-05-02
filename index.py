@@ -26,7 +26,7 @@ def call():
         args = {}
         args['data'] = params['data']
         handler_context = {}
-        code = f"{params['code']}\handler_context['result'] = fn({args})"
+        code = f"{params['code']}\nhandler_context['result'] = fn({args})"
         codeObject = compile(code, 'python_handler', 'exec')
         exec(codeObject, dict(handler_context=handler_context))
         result = handler_context['result']
