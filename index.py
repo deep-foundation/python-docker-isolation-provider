@@ -1,4 +1,5 @@
 import ast
+import asyncio
 import os
 import subprocess
 import traceback
@@ -45,7 +46,7 @@ def call():
             'data': params['data'],
             'gql': gql
         }
-        result = execute_handler(params['code'], args)
+        result = asyncio.run(execute_handler(params['code'], args))
         return jsonify({ 'resolved': result })
     except Exception as e:
         return jsonify({ 'rejected': traceback.format_exc() })
