@@ -23,7 +23,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: deepf/python-docker-isolation-provider
+          images: senchapencha5/python-docker-isolation-provider
       - name: build docker image and push
         id: docker_build
         uses: docker/build-push-action@v2
