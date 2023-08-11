@@ -12,7 +12,7 @@ app = Flask(__name__)
 GQL_URN = os.environ.get("GQL_URN", "localhost:3006/gql")
 GQL_SSL = os.environ.get("GQL_SSL", 0)
 
-def execute_handler(code, args):
+async def execute_handler(code, args):
     python_handler_context = { 'args': args }
     generated_code = f"{code}\npython_handler_context['result'] = fn(python_handler_context['args'])"
     code_object = compile(generated_code, 'python_handler', 'exec')
@@ -20,7 +20,7 @@ def execute_handler(code, args):
     result = python_handler_context['result']
     return result
 
-def make_deep_client(token):
+async def make_deep_client(token):
     if not token:
         raise ValueError("No token provided")
     url = bool(int(GQL_SSL)) if f"https://{GQL_URN}" else f"http://{GQL_URN}"
@@ -37,16 +37,16 @@ def init():
     return jsonify({})
 
 @app.route('/call', methods=['POST'])
-def call():
+async def call():
     try:
         body = request.json
         params = body['params']
         args = {
-            'deep': make_deep_client(params['jwt']),
+            'deep':  await make_deep_client(params['jwt']),
             'data': params['data'],
             'gql': gql
         }
-        result = asyncio.run(execute_handler(params['code'], args))
+        result = await execute_handler(params['code'], args)
         return jsonify({ 'resolved': result })
     except Exception as e:
         return jsonify({ 'rejected': traceback.format_exc() })
