@@ -8,9 +8,10 @@ from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 
 app = Flask(__name__)
-load_dotenv()
 GQL_URN = os.environ.get("GQL_URN", "localhost:3006/gql")
+print(f"Using GQL_URN: {GQL_URN}")
 GQL_SSL = os.environ.get("GQL_SSL", 0)
+print(f"Using GQL_SSL: {GQL_SSL}")
 TEMPLATE_CODE = """
 {{USER_CODE}}
 python_handler_context['result'] = asyncio.run(fn(python_handler_context['args']))
