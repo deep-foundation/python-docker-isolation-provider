@@ -13,21 +13,6 @@ app = Flask(__name__)
 GQL_URN = os.environ.get("GQL_URN", "3006-deepfoundation-dev-adxmoff7bpv.ws-eu103.gitpod.io/gql")
 GQL_SSL = os.environ.get("GQL_SSL", 0)
 TEMPLATE_CODE = """
-import asyncio
-from gql.transport.aiohttp import AIOHTTPTransport
-from gql import gql, Client
-from deepclient import DeepClient, DeepClientOptions
-
-async def make_deep_client(token):
-    if not token:
-        raise ValueError("No token provided")
-    url = "https://3006-deepfoundation-dev-adxmoff7bpv.ws-eu103.gitpod.io/gql"
-    transport = AIOHTTPTransport(url=url, headers={{'Authorization': f"Bearer {token}"}})
-    client = Client(transport=transport, fetch_schema_from_transport=True)
-    options = DeepClientOptions(gql_client=client)
-    deep_client = DeepClient(options)
-    return deep_client
-
 async def fn(arg):
     data = arg['data']
     deep = await make_deep_client(arg['jwt'])
