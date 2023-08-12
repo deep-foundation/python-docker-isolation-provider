@@ -3,6 +3,7 @@ import asyncio
 import os
 import subprocess
 import traceback
+from deepclient import DeepClientOptions, DeepClient
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from flask import Flask, jsonify, request
@@ -11,7 +12,31 @@ app = Flask(__name__)
 
 GQL_URN = os.environ.get("GQL_URN", "3006-deepfoundation-dev-adxmoff7bpv.ws-eu103.gitpod.io/gql")
 GQL_SSL = os.environ.get("GQL_SSL", 0)
+TEMPLATE_CODE = """
+import asyncio
+from gql.transport.aiohttp import AIOHTTPTransport
+from gql import gql, Client
+from deepclient import DeepClient, DeepClientOptions
 
+async def make_deep_client(token):
+    if not token:
+        raise ValueError("No token provided")
+    url = "https://3006-deepfoundation-dev-adxmoff7bpv.ws-eu103.gitpod.io/gql"
+    transport = AIOHTTPTransport(url=url, headers={{'Authorization': f"Bearer {token}"}})
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+    options = DeepClientOptions(gql_client=client)
+    deep_client = DeepClient(options)
+    return deep_client
+
+async def fn(arg):
+    data = arg['data']
+    deep = await make_deep_client(arg['jwt'])
+    # Place your logic here
+{{USER_CODE}}
+
+global result;
+result = loop.create_task(fn({{params}}))
+"""
 async def execute_handler(code, args):
     python_handler_context = { 'args': args }
     generated_code = f"{code}\npython_handler_context['result'] = fn(python_handler_context['args'])"
@@ -23,9 +48,11 @@ async def execute_handler(code, args):
 async def make_deep_client(token):
     if not token:
         raise ValueError("No token provided")
-    url = bool(int(GQL_SSL)) if f"https://{GQL_URN}" else f"http://{GQL_URN}"
-    transport = AIOHTTPTransport(url=url, headers={ 'Authorization': token })
-    deep_client = Client(transport=transport, fetch_schema_from_transport=True)
+    url = "https://3006-deepfoundation-dev-adxmoff7bpv.ws-eu103.gitpod.io/gql"
+    transport = AIOHTTPTransport(url=url, headers={'Authorization': f"Bearer {token}"})
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+    options = DeepClientOptions(gql_client=client)
+    deep_client = DeepClient(options)
     return deep_client
 
 @app.route('/healthz', methods=['GET'])
@@ -40,39 +67,17 @@ def init():
 async def call():
     body = request.json
     params = body['params']
-    data = params['data']
-    locals().update(data)
-    imports = ('from gql.transport.aiohttp import AIOHTTPTransport\n'
-               'import asyncio\n'
-               'from gql import gql, Client\n'
-               'from deepclient import DeepClient, DeepClientOptions\n'
-               'async def make_deep_client(token):\n'
-               ' if not token:\n'
-               '  raise ValueError("No token provided")\n'
-               ' url = "https://3006-deepfoundation-dev-adxmoff7bpv.ws-eu103.gitpod.io/gql"\n'
-               ' transport = AIOHTTPTransport(url=url, headers={ \'Authorization\': f"Bearer {token}" })\n'
-               ' client = Client(transport=transport, fetch_schema_from_transport=True)\n'
-               ' options = DeepClientOptions(gql_client=client)\n'
-               ' deep_client = DeepClient(options)\n'
-               ' return deep_client\n')
-    start = "async def fn(arg):\n" \
-            f" data = arg['data']\n" \
-            f" deep = await make_deep_client(arg['jwt'])\n" \
-            f" globals().update({data})\n" \
-            # f" gql = arg['gql']\n" \
-            # f" newLink = arg['newLink']\n"
-    code = '\n'.join([' ' + line for line in params['code'].splitlines()])
-    end = f"\nprint(asyncio.run(fn({params})))"
-    code = imports + start + code + end
-    with open("exec_code.py", "w") as file:
-        file.write(code)
-    python_path = "C:\\Coding\\python-docker-isolation-provider\\venv\\Scripts\\python.exe"
+    user_code = '\n'.join([' ' + line for line in params['code'].splitlines()])
 
-    process = subprocess.Popen([python_path, "exec_code.py"], stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    result = output.decode('utf-8')
-    print(result)
-    # obj = ast.literal_eval(result)
+    # Construct full code
+    full_code = TEMPLATE_CODE.replace("{{USER_CODE}}", user_code).replace("{{params}}", str(params))
+
+    # Execute the code
+    local_vars = {}
+    loop = asyncio.get_running_loop()
+    exec(full_code, globals(), locals())
+
+    result = await globals()['result']
     return jsonify(result)
 
 if __name__ == '__main__':
