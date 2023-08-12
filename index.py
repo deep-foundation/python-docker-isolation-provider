@@ -49,8 +49,10 @@ def call():
         code_object = compile(full_code, 'python_handler', 'exec')
         exec(code_object, globals(), dict(python_handler_context=python_handler_context))
         result = python_handler_context['result']
+        print(f"Resolved: {result}")
         return jsonify({'resolved': result})
     except Exception as e:
+        print(f"Rejected: {traceback.format_exc()}")
         return jsonify({'rejected': traceback.format_exc()})
 
 if __name__ == '__main__':
