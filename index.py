@@ -2,7 +2,7 @@ import asyncio
 import os
 import traceback
 from dotenv import load_dotenv
-from deepclient import DeepClientOptions, DeepClient
+from deepclient import DeepClient, DeepClientOptions
 from flask import Flask, jsonify, request
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
