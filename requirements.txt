@@ -17,5 +17,5 @@ multidict==6.0.4
 websockets==10.4
 Werkzeug==2.2.3
 yarl==1.9.2
-deepclient-test==1.0.5
+deepclient==1.0.1
 python-dotenv~=1.0.0
