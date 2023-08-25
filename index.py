@@ -15,6 +15,7 @@ TEMPLATE_CODE = """
 python_handler_context['result'] = asyncio.run(fn(python_handler_context['args']))
 """
 
+
 def make_deep_client(token):
     if not token:
         raise ValueError("No token provided")
@@ -25,13 +26,16 @@ def make_deep_client(token):
     deep_client = DeepClient(options)
     return deep_client
 
+
 @app.route('/healthz', methods=['GET'])
 def healthz():
     return jsonify({})
 
+
 @app.route('/init', methods=['POST'])
 def init():
     return jsonify({})
+
 
 @app.route('/call', methods=['POST'])
 def call():
@@ -52,6 +56,7 @@ def call():
     except Exception as e:
         print(f"Rejected: {traceback.format_exc()}")
         return jsonify({'rejected': traceback.format_exc()})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=os.environ.get("PORT"), use_reloader=False, threaded=True)
