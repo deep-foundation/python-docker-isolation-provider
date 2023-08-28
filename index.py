@@ -27,6 +27,20 @@ def make_deep_client(token):
     return deep_client
 
 
+def separate_imports(code_str):
+    import_lines = []
+    other_lines = []
+
+    for line in code_str.split('\n'):
+        stripped_line = line.strip()
+        if stripped_line.startswith(('import', 'from')):
+            import_lines.append(line)
+        else:
+            other_lines.append(line)
+
+    return '\n'.join(import_lines), '\n'.join(other_lines)
+
+
 @app.route('/healthz', methods=['GET'])
 def healthz():
     return jsonify({})
@@ -43,12 +57,14 @@ def call():
         body = request.json
         params = body['params']
         full_code = TEMPLATE_CODE.replace("{{USER_CODE}}", params['code'])
+        import_section, code_section = separate_imports(full_code)
+        exec(import_section, globals())
         args = {
             'deep': make_deep_client(params['jwt']),
             'data': params['data'],
         }
         python_handler_context = {'args': args}
-        code_object = compile(full_code, 'python_handler', 'exec')
+        code_object = compile(code_section, 'python_handler', 'exec')
         exec(code_object, globals(), dict(python_handler_context=python_handler_context))
         result = python_handler_context['result']
         print(f"Resolved: {result}")
