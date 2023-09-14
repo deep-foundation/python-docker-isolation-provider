@@ -26,3 +26,5 @@ librosa==0.10.1
 transformers==4.32.1
 torch==2.0.1
 discord.py==2.3.2
+aiogram==2.25.1
+openai==0.27.0
