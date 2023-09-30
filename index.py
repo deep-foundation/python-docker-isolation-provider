@@ -6,6 +6,7 @@ from deepclient import DeepClient, DeepClientOptions
 from flask import Flask, jsonify, request
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
+import uvicorn
 
 app = Flask(__name__)
 GQL_URN = os.environ.get("GQL_URN", "localhost:3006/gql")
@@ -75,4 +76,4 @@ def call():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=os.environ.get("PORT"), use_reloader=False, threaded=True)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 5000)), log_level="info", reload=False)
