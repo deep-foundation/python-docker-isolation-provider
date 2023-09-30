@@ -6,6 +6,7 @@ from deepclient import DeepClient, DeepClientOptions
 from flask import Flask, jsonify, request
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
+from asgiref.wsgi import WsgiToAsgi
 import uvicorn
 
 app = Flask(__name__)
@@ -74,6 +75,6 @@ def call():
         print(f"Rejected: {traceback.format_exc()}")
         return jsonify({'rejected': traceback.format_exc()})
 
-
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 5000)), log_level="info", reload=False)
+    asgi_app = WsgiToAsgi(app)
+    uvicorn.run(asgi_app, host="0.0.0.0", port=8080, log_level="info", reload=False)
